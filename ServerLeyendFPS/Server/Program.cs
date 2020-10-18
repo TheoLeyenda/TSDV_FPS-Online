@@ -8,14 +8,28 @@ namespace Server
 
     class Program
     {
-        struct Position
+        class Transform
         {
-            public float x;
-            public float y;
+            public struct Position
+            {
+                public float x;
+                public float y;
+                public float z;
+            }
+            public struct EulerRotation
+            {
+                public float x;
+                public float y;
+                public float z;
+            }
+
+            public Position position;
+            public EulerRotation rotation;
         }
 
+       
         static Host _server = new Host();
-        private static Dictionary<uint, Position> _players = new Dictionary<uint, Position>();
+        private static Dictionary<uint, Transform> _players = new Dictionary<uint, Transform>();
 
         static void Main(string[] args)
         {
@@ -84,13 +98,23 @@ namespace Server
             LoginRequest = 1,
             LoginResponse = 2,
             LoginEvent = 3,
-            PositionUpdateRequest = 4,
-            PositionUpdateEvent = 5,
+            PositionAndRotationUpdateRequest = 4,
+            PositionAndRotationUpdateEvent = 5,
             LogoutEvent = 6
         }
 
         static void HandlePacket(ref Event netEvent)
         {
+            Transform transform = new Transform();
+
+            transform.position.x = 0;
+            transform.position.y = 0;
+            transform.position.z = 0;
+
+            transform.rotation.x = 0;
+            transform.rotation.y = 0;
+            transform.rotation.z = 0;
+
             var readBuffer = new byte[1024];
             var readStream = new MemoryStream(readBuffer);
             var reader = new BinaryReader(readStream);
@@ -99,7 +123,7 @@ namespace Server
             netEvent.Packet.CopyTo(readBuffer);
             var packetId = (PacketId)reader.ReadByte();
 
-            if (packetId != PacketId.PositionUpdateRequest)
+            if (packetId != PacketId.PositionAndRotationUpdateRequest)
                 Console.WriteLine($"HandlePacket received: {packetId}");
 
             if (packetId == PacketId.LoginRequest)
@@ -111,15 +135,20 @@ namespace Server
                 {
                     SendLoginEvent(ref netEvent, p.Key);
                 }
-                _players.Add(playerId, new Position { x = 0.0f, y = 0.0f });
+                _players.Add(playerId, transform);
             }
-            else if (packetId == PacketId.PositionUpdateRequest)
+            else if (packetId == PacketId.PositionAndRotationUpdateRequest)
             {
                 var playerId = reader.ReadUInt32();
-                var x = reader.ReadSingle();
-                var y = reader.ReadSingle();
+                var posX = reader.ReadSingle();
+                var posY = reader.ReadSingle();
+                var posZ = reader.ReadSingle();
+                var rotX = reader.ReadSingle();
+                var rotY = reader.ReadSingle();
+                var rotZ = reader.ReadSingle();
+
                 //Console.WriteLine($"ID: {playerId}, Pos: {x}, {y}");
-                BroadcastPositionUpdateEvent(playerId, x, y);
+                BroadcastPositionUpdateEvent(playerId, posX, posY, posZ, rotX, rotY, rotZ);
             }
         }
 
@@ -154,10 +183,10 @@ namespace Server
         }
 
         //Updateo la posicion del player
-        static void BroadcastPositionUpdateEvent(uint playerId, float x, float y)
+        static void BroadcastPositionUpdateEvent(uint playerId, float posX, float posY, float posZ, float rotX, float rotY, float rotZ)
         {
             var protocol = new Protocol();
-            var buffer = protocol.Serialize((byte)PacketId.PositionUpdateEvent, playerId, x, y);
+            var buffer = protocol.Serialize((byte)PacketId.PositionAndRotationUpdateEvent, playerId, posX, posY, posZ, rotX, rotY, rotZ);
             var packet = default(Packet);
             packet.Create(buffer);
             _server.Broadcast(0, ref packet);

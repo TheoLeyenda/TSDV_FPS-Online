@@ -11,10 +11,10 @@ using Random = UnityEngine.Random;
 public class NetWorkingManager : MonoBehaviour
 {
 
-    public GameObject myPlayerFactory;
+    //public GameObject myPlayerFactory;
     public GameObject otherPlayerFactory;
 
-    private GameObject _myPlayer;
+    [SerializeField] private GameObject _myPlayer;
     private uint _myPlayerId;
 
     private Host _client;
@@ -29,7 +29,7 @@ public class NetWorkingManager : MonoBehaviour
         Screen.SetResolution(640, 480, false);
         Application.runInBackground = true;
         InitENet();
-        _myPlayer = Instantiate(myPlayerFactory);
+        //_myPlayer = Instantiate(myPlayerFactory);
     }
     void FixedUpdate()
     {
@@ -38,7 +38,7 @@ public class NetWorkingManager : MonoBehaviour
         if (++_skipFrame < 3)
             return;
 
-        SendPositionUpdate();
+        SendPositionAndRotationUpdate();
         _skipFrame = 0;
     }
 
@@ -108,18 +108,23 @@ public class NetWorkingManager : MonoBehaviour
         LoginRequest = 1,
         LoginResponse = 2,
         LoginEvent = 3,
-        PositionUpdateRequest = 4,
-        PositionUpdateEvent = 5,
+        PositionAndRotationUpdateRequest = 4,
+        PositionAndRotationUpdateEvent = 5,
         LogoutEvent = 6
     }
 
-    private void SendPositionUpdate()
+    private void SendPositionAndRotationUpdate()
     {
-        var x = _myPlayer.GetComponent<Rigidbody2D>().position.x;
-        var y = _myPlayer.GetComponent<Rigidbody2D>().position.y;
+        var posX = _myPlayer.transform.position.x;
+        var posY = _myPlayer.transform.position.y;
+        var posZ = _myPlayer.transform.position.z;
+
+        var rotX = _myPlayer.transform.rotation.x;
+        var rotY = _myPlayer.transform.rotation.y;
+        var rotZ = _myPlayer.transform.rotation.z;
 
         var protocol = new Protocol();
-        var buffer = protocol.Serialize((byte)PacketId.PositionUpdateRequest, _myPlayerId, x, y);
+        var buffer = protocol.Serialize((byte)PacketId.PositionAndRotationUpdateRequest, _myPlayerId, posX, posY, posZ, rotX, rotY, rotZ);
         var packet = default(Packet);
         packet.Create(buffer);
         _peer.Send(channelID, ref packet);
@@ -158,12 +163,22 @@ public class NetWorkingManager : MonoBehaviour
             Debug.Log("OtherPlayerId: " + playerId);
             SpawnOtherPlayer(playerId);
         }
-        else if (packetId == PacketId.PositionUpdateEvent)
+        else if (packetId == PacketId.PositionAndRotationUpdateEvent)
         {
             var playerId = reader.ReadUInt32();
-            var x = reader.ReadSingle();
-            var y = reader.ReadSingle();
-            UpdatePosition(playerId, x, y);
+            
+            //LEO POSICIONES
+            var posX = reader.ReadSingle();
+            var posY = reader.ReadSingle();
+            var posZ = reader.ReadSingle();
+
+            //LEO ROTACION
+            var rotX = reader.ReadSingle();
+            var rotY = reader.ReadSingle();
+            var rotZ = reader.ReadSingle();
+
+            UpdatePosition(playerId, posX, posY, posZ);
+            UpdateRotation(playerId, rotX, rotY, rotZ);
         }
         else if (packetId == PacketId.LogoutEvent)
         {
@@ -181,17 +196,33 @@ public class NetWorkingManager : MonoBehaviour
         if (playerId == _myPlayerId)
             return;
         var newPlayer = Instantiate(otherPlayerFactory);
-        newPlayer.transform.position = newPlayer.GetComponent<Rigidbody2D>().position + new Vector2(Random.Range(-5.0f, 5.0f), Random.Range(-5.0f, 5.0f));
+        newPlayer.transform.position = newPlayer.transform.position + new Vector3(Random.Range(-5.0f, 5.0f),0 , Random.Range(-5.0f, 5.0f));
         Debug.Log("Spawn other object " + playerId);
         _players[playerId] = newPlayer;
     }
 
-    private void UpdatePosition(uint playerId, float x, float y)
+    private void UpdatePosition(uint playerId, float x, float y, float z)
     {
         if (playerId == _myPlayerId)
             return;
 
         Debug.Log("UpdatePosition " + playerId);
-        _players[playerId].transform.position = new Vector2(x, y);
+        _players[playerId].transform.position = new Vector3(x, y, z);
+    }
+    private void UpdateRotation(uint playerId, float x, float y, float z, float w)
+    {
+        if (playerId == _myPlayerId)
+            return;
+
+        Debug.Log("UpdateRotation " + playerId);
+        _players[playerId].transform.rotation = new Quaternion(x, y, z, w);
+    }
+    private void UpdateRotation(uint playerId, float x, float y, float z)
+    {
+        if (playerId == _myPlayerId)
+            return;
+
+        Debug.Log("UpdateRotation " + playerId);
+        _players[playerId].transform.eulerAngles = new Vector3(x, y, z);
     }
 }

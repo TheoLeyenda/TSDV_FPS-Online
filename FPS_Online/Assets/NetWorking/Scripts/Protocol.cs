@@ -27,14 +27,22 @@ namespace Server
             return m_buffer;
         }
 
-        public byte[] Serialize(byte code, uint value, float x, float y)
+        public byte[] Serialize(byte code, uint value, float posX, float posY, float posZ, float rotX, float rotY, float rotZ)
         {
-            const int bufSize = sizeof(byte) + sizeof(int) + sizeof(float) + sizeof(float);
+            const int bufSize = sizeof(byte) + sizeof(int) + (sizeof(float) * 6);
             InitWriter(bufSize);
             m_writer.Write(code);
             m_writer.Write(value);
-            m_writer.Write(x);
-            m_writer.Write(y);
+
+            //POSICION
+            m_writer.Write(posX);
+            m_writer.Write(posY);
+            m_writer.Write(posZ);
+
+            //ROTACION
+            m_writer.Write(rotX);
+            m_writer.Write(rotY);
+            m_writer.Write(rotZ);
             return m_buffer;
         }
 
