@@ -14,7 +14,7 @@ public class NetWorkingManager : MonoBehaviour
     //public GameObject myPlayerFactory;
     public GameObject otherPlayerFactory;
 
-    [SerializeField] private GameObject _myPlayer;
+    [SerializeField] private GameObject _myPlayer = null;
     private uint _myPlayerId;
 
     private Host _client;
@@ -115,13 +115,14 @@ public class NetWorkingManager : MonoBehaviour
 
     private void SendPositionAndRotationUpdate()
     {
-        var posX = _myPlayer.transform.position.x;
-        var posY = _myPlayer.transform.position.y;
-        var posZ = _myPlayer.transform.position.z;
+        float posX = _myPlayer.transform.position.x;
+        float posY = _myPlayer.transform.position.y;
+        float posZ = _myPlayer.transform.position.z;
 
-        var rotX = _myPlayer.transform.rotation.x;
-        var rotY = _myPlayer.transform.rotation.y;
-        var rotZ = _myPlayer.transform.rotation.z;
+        
+        float rotX = _myPlayer.transform.eulerAngles.x;
+        float rotY = _myPlayer.transform.eulerAngles.y;
+        float rotZ = _myPlayer.transform.eulerAngles.z;
 
         var protocol = new Protocol();
         var buffer = protocol.Serialize((byte)PacketId.PositionAndRotationUpdateRequest, _myPlayerId, posX, posY, posZ, rotX, rotY, rotZ);
@@ -150,7 +151,7 @@ public class NetWorkingManager : MonoBehaviour
         netEvent.Packet.CopyTo(readBuffer);
         var packetId = (PacketId)reader.ReadByte();
 
-        Debug.Log("ParsePacket received: " + packetId);
+        //Debug.Log("ParsePacket received: " + packetId);
 
         if (packetId == PacketId.LoginResponse)
         {
@@ -206,23 +207,15 @@ public class NetWorkingManager : MonoBehaviour
         if (playerId == _myPlayerId)
             return;
 
-        Debug.Log("UpdatePosition " + playerId);
+        //Debug.Log("UpdatePosition " + playerId);
         _players[playerId].transform.position = new Vector3(x, y, z);
-    }
-    private void UpdateRotation(uint playerId, float x, float y, float z, float w)
-    {
-        if (playerId == _myPlayerId)
-            return;
-
-        Debug.Log("UpdateRotation " + playerId);
-        _players[playerId].transform.rotation = new Quaternion(x, y, z, w);
     }
     private void UpdateRotation(uint playerId, float x, float y, float z)
     {
         if (playerId == _myPlayerId)
             return;
 
-        Debug.Log("UpdateRotation " + playerId);
-        _players[playerId].transform.eulerAngles = new Vector3(x, y, z);
+        //Debug.Log("UpdateRotation " + playerId);
+        _players[playerId].transform.eulerAngles = new Vector3(x, y, z) ;
     }
 }
