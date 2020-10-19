@@ -28,9 +28,12 @@ namespace Server
             return m_buffer;
         }
 
-        public byte[] Serialize(byte code, uint value, float posX, float posY, float posZ, float rotX, float rotY, float rotZ)
+        public byte[] Serialize(byte code, uint value, 
+                                float posX, float posY, float posZ, 
+                                float rotX, float rotY, float rotZ,
+                                float rotPivotWeaponX, float rotPivotWeaponY, float rotPivotWeaponZ)
         {
-            const int bufSize = sizeof(byte) + sizeof(int) + (sizeof(float) *6);
+            const int bufSize = sizeof(byte) + sizeof(int) + (sizeof(float) *9);
             InitWriter(bufSize);
             m_writer.Write(code);
             m_writer.Write(value);
@@ -44,9 +47,14 @@ namespace Server
             m_writer.Write(rotX);
             m_writer.Write(rotY);
             m_writer.Write(rotZ);
+
+            //ROTACION PIVOT
+            m_writer.Write(rotPivotWeaponX);
+            m_writer.Write(rotPivotWeaponY);
+            m_writer.Write(rotPivotWeaponZ);
+
             return m_buffer;
         }
-
         public void Deserialize(byte[] buf, out byte code, out int value)
         {
             InitReader(buf);

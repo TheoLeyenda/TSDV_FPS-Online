@@ -8,7 +8,7 @@ namespace Server
 
     class Program
     {
-        class Transform
+        struct InfoPlayer
         {
             public struct Position
             {
@@ -22,14 +22,20 @@ namespace Server
                 public float y;
                 public float z;
             }
-
+            public struct EularRotationPivotWeapon
+            {
+                public float x;
+                public float y;
+                public float z;
+            }
             public Position position;
             public EulerRotation rotation;
+            public EularRotationPivotWeapon rotationPivotWeapon;
         }
 
        
         static Host _server = new Host();
-        private static Dictionary<uint, Transform> _players = new Dictionary<uint, Transform>();
+        private static Dictionary<uint, InfoPlayer> _players = new Dictionary<uint, InfoPlayer>();
 
         static void Main(string[] args)
         {
@@ -105,7 +111,7 @@ namespace Server
 
         static void HandlePacket(ref Event netEvent)
         {
-            Transform transform = new Transform();
+            InfoPlayer transform = new InfoPlayer();
 
             transform.position.x = 0;
             transform.position.y = 0;
@@ -114,6 +120,10 @@ namespace Server
             transform.rotation.x = 0;
             transform.rotation.y = 0;
             transform.rotation.z = 0;
+
+            transform.rotationPivotWeapon.x = 0;
+            transform.rotationPivotWeapon.y = 0;
+            transform.rotationPivotWeapon.z = 0;
 
             var readBuffer = new byte[1024];
             var readStream = new MemoryStream(readBuffer);
@@ -140,15 +150,23 @@ namespace Server
             else if (packetId == PacketId.PositionAndRotationUpdateRequest)
             {
                 var playerId = reader.ReadUInt32();
-                var posX = reader.ReadSingle();
-                var posY = reader.ReadSingle();
-                var posZ = reader.ReadSingle();
-                var rotX = reader.ReadSingle();
-                var rotY = reader.ReadSingle();
-                var rotZ = reader.ReadSingle();
+
+                InfoPlayer infoPlayer;
+
+                infoPlayer.position.x = reader.ReadSingle();
+                infoPlayer.position.y = reader.ReadSingle();
+                infoPlayer.position.z = reader.ReadSingle();
+
+                infoPlayer.rotation.x = reader.ReadSingle();
+                infoPlayer.rotation.y = reader.ReadSingle();
+                infoPlayer.rotation.z = reader.ReadSingle();
+
+                infoPlayer.rotationPivotWeapon.x = reader.ReadSingle();
+                infoPlayer.rotationPivotWeapon.y = reader.ReadSingle();
+                infoPlayer.rotationPivotWeapon.z = reader.ReadSingle();
 
                 //Console.WriteLine($"ID: {playerId}, Pos: {x}, {y}");
-                BroadcastPositionUpdateEvent(playerId, posX, posY, posZ, rotX, rotY, rotZ);
+                BroadcastPositionUpdateEvent(playerId, ref infoPlayer);
             }
         }
 
@@ -183,10 +201,13 @@ namespace Server
         }
 
         //Updateo la posicion del player
-        static void BroadcastPositionUpdateEvent(uint playerId, float posX, float posY, float posZ, float rotX, float rotY, float rotZ)
+        static void BroadcastPositionUpdateEvent(uint playerId, ref InfoPlayer infoPlayer)
         {
             var protocol = new Protocol();
-            var buffer = protocol.Serialize((byte)PacketId.PositionAndRotationUpdateEvent, playerId, posX, posY, posZ, rotX, rotY, rotZ);
+            var buffer = protocol.Serialize((byte)PacketId.PositionAndRotationUpdateEvent, playerId, 
+                                            infoPlayer.position.x, infoPlayer.position.y, infoPlayer.position.z, 
+                                            infoPlayer.rotation.x, infoPlayer.rotation.y, infoPlayer.rotation.z,
+                                            infoPlayer.rotationPivotWeapon.x, infoPlayer.rotationPivotWeapon.y, infoPlayer.rotationPivotWeapon.z);
             var packet = default(Packet);
             packet.Create(buffer);
             _server.Broadcast(0, ref packet);

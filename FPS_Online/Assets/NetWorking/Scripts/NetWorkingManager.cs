@@ -12,15 +12,15 @@ public class NetWorkingManager : MonoBehaviour
 {
 
     //public GameObject myPlayerFactory;
-    public GameObject otherPlayerFactory;
+    public PlayerData otherPlayerFactory;
 
-    [SerializeField] private GameObject _myPlayer = null;
+    [SerializeField] private PlayerData _myPlayer = null;
     private uint _myPlayerId;
 
     private Host _client;
     private Peer _peer;
     private int _skipFrame = 0;
-    private Dictionary<uint, GameObject> _players = new Dictionary<uint, GameObject>();
+    private Dictionary<uint, PlayerData> _players = new Dictionary<uint, PlayerData>();
 
     const int channelID = 0;
 
@@ -115,17 +115,24 @@ public class NetWorkingManager : MonoBehaviour
 
     private void SendPositionAndRotationUpdate()
     {
-        float posX = _myPlayer.transform.position.x;
-        float posY = _myPlayer.transform.position.y;
-        float posZ = _myPlayer.transform.position.z;
+        float posX = _myPlayer.myPrefab.transform.position.x;
+        float posY = _myPlayer.myPrefab.transform.position.y;
+        float posZ = _myPlayer.myPrefab.transform.position.z;
 
         
-        float rotX = _myPlayer.transform.eulerAngles.x;
-        float rotY = _myPlayer.transform.eulerAngles.y;
-        float rotZ = _myPlayer.transform.eulerAngles.z;
+        float rotX = _myPlayer.myPrefab.transform.eulerAngles.x;
+        float rotY = _myPlayer.myPrefab.transform.eulerAngles.y;
+        float rotZ = _myPlayer.myPrefab.transform.eulerAngles.z;
+
+        float rotPivotWeaponX = _myPlayer.pivotWeaponGameObject.transform.eulerAngles.x;
+        float rotPivotWeaponY = _myPlayer.pivotWeaponGameObject.transform.eulerAngles.y;
+        float rotPivotWeaponZ = _myPlayer.pivotWeaponGameObject.transform.eulerAngles.z;
 
         var protocol = new Protocol();
-        var buffer = protocol.Serialize((byte)PacketId.PositionAndRotationUpdateRequest, _myPlayerId, posX, posY, posZ, rotX, rotY, rotZ);
+        var buffer = protocol.Serialize((byte)PacketId.PositionAndRotationUpdateRequest, _myPlayerId, 
+                                       posX, posY, posZ, 
+                                       rotX, rotY, rotZ,
+                                       rotPivotWeaponX, rotPivotWeaponY, rotPivotWeaponZ);
         var packet = default(Packet);
         packet.Create(buffer);
         _peer.Send(channelID, ref packet);
@@ -178,15 +185,20 @@ public class NetWorkingManager : MonoBehaviour
             var rotY = reader.ReadSingle();
             var rotZ = reader.ReadSingle();
 
+            var rotPivotWeaponX = reader.ReadSingle();
+            var rotPivotWeaponY = reader.ReadSingle();
+            var rotPivotWeaponZ = reader.ReadSingle();
+
             UpdatePosition(playerId, posX, posY, posZ);
             UpdateRotation(playerId, rotX, rotY, rotZ);
+            UpdateRotationPivotWeapon(playerId, rotPivotWeaponX, rotPivotWeaponY, rotPivotWeaponZ);
         }
         else if (packetId == PacketId.LogoutEvent)
         {
             var playerId = reader.ReadUInt32();
             if (_players.ContainsKey(playerId))
             {
-                Destroy(_players[playerId]);
+                Destroy(_players[playerId].myPrefab);
                 _players.Remove(playerId);
             }
         }
@@ -194,10 +206,12 @@ public class NetWorkingManager : MonoBehaviour
 
     private void SpawnOtherPlayer(uint playerId)
     {
+        float randomRange = 10.0f;
+        float altura = 5.0f;
         if (playerId == _myPlayerId)
             return;
-        var newPlayer = Instantiate(otherPlayerFactory);
-        newPlayer.transform.position = newPlayer.transform.position + new Vector3(Random.Range(-5.0f, 5.0f),0 , Random.Range(-5.0f, 5.0f));
+        PlayerData newPlayer = Instantiate(otherPlayerFactory);
+        newPlayer.myPrefab.transform.position = newPlayer.myPrefab.transform.position + new Vector3(Random.Range(-randomRange, randomRange), altura, Random.Range(-randomRange, randomRange));
         Debug.Log("Spawn other object " + playerId);
         _players[playerId] = newPlayer;
     }
@@ -208,7 +222,7 @@ public class NetWorkingManager : MonoBehaviour
             return;
 
         //Debug.Log("UpdatePosition " + playerId);
-        _players[playerId].transform.position = new Vector3(x, y, z);
+        _players[playerId].myPrefab.transform.position = new Vector3(x, y, z);
     }
     private void UpdateRotation(uint playerId, float x, float y, float z)
     {
@@ -216,6 +230,14 @@ public class NetWorkingManager : MonoBehaviour
             return;
 
         //Debug.Log("UpdateRotation " + playerId);
-        _players[playerId].transform.eulerAngles = new Vector3(x, y, z) ;
+        _players[playerId].myPrefab.transform.eulerAngles = new Vector3(x, y, z);
+    }
+    private void UpdateRotationPivotWeapon(uint playerId, float x, float y, float z)
+    {
+        if (playerId == _myPlayerId)
+            return;
+
+        //Debug.Log("UpdateRotation " + playerId);
+        _players[playerId].pivotWeaponGameObject.transform.eulerAngles = new Vector3(x, y, z);
     }
 }

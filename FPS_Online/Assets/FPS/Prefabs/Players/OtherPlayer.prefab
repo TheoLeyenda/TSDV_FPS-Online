@@ -1,5 +1,36 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1990003620368978712
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2675259093365632443}
+  m_Layer: 0
+  m_Name: PivotWeapon
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2675259093365632443
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1990003620368978712}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.225, y: 1.231, z: 0.276}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 234059937266366972}
+  m_Father: {fileID: 81507293641291983}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2083108559350859494
 GameObject:
   m_ObjectHideFlags: 0
@@ -12,6 +43,7 @@ GameObject:
   - component: {fileID: 4222171222771599414}
   - component: {fileID: 5317000472178861167}
   - component: {fileID: 7506372327839650496}
+  - component: {fileID: -8920937697342094079}
   m_Layer: 0
   m_Name: OtherPlayer
   m_TagString: Untagged
@@ -30,7 +62,7 @@ Transform:
   m_LocalPosition: {x: -28.5, y: -0.24432945, z: -4.93}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 234059937266366972}
+  - {fileID: 2675259093365632443}
   - {fileID: 8666019740232839442}
   - {fileID: 5337708956792323364}
   - {fileID: 7725968030300250335}
@@ -44,7 +76,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2083108559350859494}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c8534e17a0f90604c9afd4f5c73d829f, type: 3}
   m_Name: 
@@ -80,6 +112,20 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 80
   m_CollisionDetection: 0
+--- !u!114 &-8920937697342094079
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2083108559350859494}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5bddf3ea0c4dbb747bb2b75659eba727, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  myPrefab: {fileID: 2083108559350859494}
+  pivotWeaponGameObject: {fileID: 1990003620368978712}
 --- !u!1 &3548042293292683991
 GameObject:
   m_ObjectHideFlags: 0
@@ -332,22 +378,22 @@ PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Modification:
-    m_TransformParent: {fileID: 81507293641291983}
+    m_TransformParent: {fileID: 2675259093365632443}
     m_Modifications:
     - target: {fileID: 2225486910712267856, guid: b318fabc73446b746a1005cede0c4ceb,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.255
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2225486910712267856, guid: b318fabc73446b746a1005cede0c4ceb,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.156
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2225486910712267856, guid: b318fabc73446b746a1005cede0c4ceb,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.09
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2225486910712267856, guid: b318fabc73446b746a1005cede0c4ceb,
         type: 3}
