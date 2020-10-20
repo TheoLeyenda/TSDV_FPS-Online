@@ -92,6 +92,7 @@
     <Compile Include="Assets\FPS\Scripts\MeshCombineUtility.cs" />
     <Compile Include="Assets\FPS\Scripts\MeshCombiner.cs" />
     <Compile Include="Assets\FPS\Scripts\MinMaxParameters.cs" />
+    <Compile Include="Assets\FPS\Scripts\MyProjectile\OtherProjectile.cs" />
     <Compile Include="Assets\FPS\Scripts\MyWeapons\OtherPlayerWeapon.cs" />
     <Compile Include="Assets\FPS\Scripts\NavigationModule.cs" />
     <Compile Include="Assets\FPS\Scripts\Objective.cs" />
