@@ -7,4 +7,5 @@ public class PlayerData : MonoBehaviour
     // Start is called before the first frame update
     public GameObject myPrefab;
     public GameObject pivotWeaponGameObject;
+    public OtherPlayerWeapon otherPlayerWeapon;
 }

@@ -23,10 +23,18 @@ public class NetWorkingManager : MonoBehaviour
     private Dictionary<uint, PlayerData> _players = new Dictionary<uint, PlayerData>();
 
     const int channelID = 0;
-
+    private void OnEnable()
+    {
+        ProjectileStandard.OnShootBullet += SendSpawnBullet;
+    }
+    private void OnDisable()
+    {
+        ProjectileStandard.OnShootBullet -= SendSpawnBullet;
+    }
     void Start()
     {
-        Screen.SetResolution(640, 480, false);
+        //Screen.SetResolution(640, 480, false);
+        Screen.fullScreen = false;
         Application.runInBackground = true;
         InitENet();
         //_myPlayer = Instantiate(myPlayerFactory);
@@ -110,9 +118,17 @@ public class NetWorkingManager : MonoBehaviour
         LoginEvent = 3,
         PositionAndRotationUpdateRequest = 4,
         PositionAndRotationUpdateEvent = 5,
-        LogoutEvent = 6
+        LogoutEvent = 6,
+        SpawnBulletEvent = 7,
     }
-
+    private void SendSpawnBullet(ProjectileStandard otherPlayerWeapon)
+    {
+        var protocol = new Protocol();
+        var buffer = protocol.Serialize((byte)PacketId.SpawnBulletEvent, _myPlayerId);
+        var packet = default(Packet);
+        packet.Create(buffer);
+        _peer.Send(channelID, ref packet);
+    }
     private void SendPositionAndRotationUpdate()
     {
         float posX = _myPlayer.myPrefab.transform.position.x;
@@ -174,7 +190,7 @@ public class NetWorkingManager : MonoBehaviour
         else if (packetId == PacketId.PositionAndRotationUpdateEvent)
         {
             var playerId = reader.ReadUInt32();
-            
+
             //LEO POSICIONES
             var posX = reader.ReadSingle();
             var posY = reader.ReadSingle();
@@ -202,8 +218,18 @@ public class NetWorkingManager : MonoBehaviour
                 _players.Remove(playerId);
             }
         }
+        else if (packetId == PacketId.SpawnBulletEvent)
+        {
+            var playerId = reader.ReadUInt32();
+            SpawnBulletOtherPlayer(playerId);
+        }
     }
-
+    private void SpawnBulletOtherPlayer(uint playerId)
+    {
+        if (playerId == _myPlayerId)
+            return;
+        _players[playerId].otherPlayerWeapon.ShootProjectile();
+    }
     private void SpawnOtherPlayer(uint playerId)
     {
         float randomRange = 10.0f;

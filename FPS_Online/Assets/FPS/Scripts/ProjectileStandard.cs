@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
-
+using System;
 [RequireComponent(typeof(ProjectileBase))]
 public class ProjectileStandard : MonoBehaviour
 {
@@ -54,9 +54,11 @@ public class ProjectileStandard : MonoBehaviour
     List<Collider> m_IgnoredColliders;
 
     const QueryTriggerInteraction k_TriggerInteraction = QueryTriggerInteraction.Collide;
-
+    public static event Action<ProjectileStandard> OnShootBullet;
     private void OnEnable()
     {
+        if (OnShootBullet != null)
+            OnShootBullet(this);
         m_ProjectileBase = GetComponent<ProjectileBase>();
         DebugUtility.HandleErrorIfNullGetComponent<ProjectileBase, ProjectileStandard>(m_ProjectileBase, this, gameObject);
 

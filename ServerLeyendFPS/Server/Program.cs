@@ -106,7 +106,8 @@ namespace Server
             LoginEvent = 3,
             PositionAndRotationUpdateRequest = 4,
             PositionAndRotationUpdateEvent = 5,
-            LogoutEvent = 6
+            LogoutEvent = 6,
+            SpawnBulletEvent = 7,
         }
 
         static void HandlePacket(ref Event netEvent)
@@ -168,8 +169,20 @@ namespace Server
                 //Console.WriteLine($"ID: {playerId}, Pos: {x}, {y}");
                 BroadcastPositionUpdateEvent(playerId, ref infoPlayer);
             }
+            else if(packetId == PacketId.SpawnBulletEvent)
+            {
+                var playerId = reader.ReadUInt32();
+                SendSpawnBulletEvent(playerId);
+            }
         }
-
+        static void SendSpawnBulletEvent(uint playerId)
+        {
+            var protocol = new Protocol();
+            var buffer = protocol.Serialize((byte)PacketId.SpawnBulletEvent, playerId);
+            var packet = default(Packet);
+            packet.Create(buffer);
+            _server.Broadcast(0, ref packet);
+        }
         //Se llama cuando un cliente desea conectarse al server.
         static void SendLoginResponse(ref Event netEvent, uint playerId)
         {
