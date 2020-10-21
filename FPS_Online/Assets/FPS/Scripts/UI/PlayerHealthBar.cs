@@ -7,7 +7,7 @@ public class PlayerHealthBar : MonoBehaviour
 {
     [Tooltip("Image component dispplaying current health")]
     public Image healthFillImage;
-
+    public bool enableBehaviour = true;
     Health m_PlayerHealth;
 
     private void Start()
@@ -21,7 +21,9 @@ public class PlayerHealthBar : MonoBehaviour
 
     void Update()
     {
-        // update health bar value
-        healthFillImage.fillAmount = m_PlayerHealth.currentHealth / m_PlayerHealth.maxHealth;
+        if (enableBehaviour)
+        {
+            healthFillImage.fillAmount = m_PlayerHealth.currentHealth / m_PlayerHealth.maxHealth;
+        }
     }
 }

@@ -6,21 +6,24 @@ public class OtherProjectile : MonoBehaviour
 {
     public float speed;
     public float damage;
-    // Update is called once per frame
-    void Update()
+    public float timeLife = 4.0f;
+    public Rigidbody rig;
+
+    private void Start()
     {
-        Movement();
+        rig = GetComponent<Rigidbody>();
+        rig.AddForce(transform.forward * speed, ForceMode.VelocityChange);
+        Destroy(gameObject, timeLife);
     }
-    public void Movement()
+    private void OnTriggerStay(Collider other)
     {
-        transform.position = transform.position + transform.forward * speed * Time.deltaTime;
-    }
-    private void OnTriggerEnter(Collider other)
-    {
-        Damageable damageable = other.GetComponent<Damageable>();
-        if (damageable != null)
+        if (other.tag != "Player")
         {
-            damageable.InflictDamage(damage, false, gameObject);
+            Destroy(gameObject);
+        }
+        if (other.tag == "Player")
+        {
+
         }
     }
 }
