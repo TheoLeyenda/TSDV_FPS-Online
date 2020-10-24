@@ -60,7 +60,7 @@ namespace Server
                 {
                     if (_server.CheckEvents(out netEvent) <= 0)
                     {
-                        if (_server.Service(15, out netEvent) <= 0)
+                        if (_server.Service(5, out netEvent) <= 0)
                             break;
 
                         polled = true;
@@ -108,6 +108,9 @@ namespace Server
             PositionAndRotationUpdateEvent = 5,
             LogoutEvent = 6,
             SpawnBulletEvent = 7,
+            CheckColisionBullet = 8,
+            CollisionBulletTrue = 9,
+            CollisionBulletFalse = 10,
         }
 
         static void HandlePacket(ref Event netEvent)
@@ -174,6 +177,58 @@ namespace Server
                 var playerId = reader.ReadUInt32();
                 SendSpawnBulletEvent(playerId);
             }
+            else if(packetId == PacketId.CheckColisionBullet)
+            {
+                var playerId = reader.ReadUInt32();
+
+                float rangeToleration = 10f;
+                float positionBulletX = reader.ReadSingle();
+                float positionBulletY = reader.ReadSingle();
+                float positionBulletZ = reader.ReadSingle();
+
+                float positionPlayerX = _players[playerId].position.x;
+                float positionPlayerY = _players[playerId].position.y;
+                float positionPlayerZ = _players[playerId].position.z;
+
+                bool enableX = false;
+                bool enableY = false;
+                bool enableZ = false;
+                //      3.5                 5f;               5                   3.5                 5f;              5
+                if (positionPlayerX + rangeToleration >= positionBulletX && positionPlayerX - rangeToleration <= positionBulletX)
+                    enableX = true;
+
+                if (positionPlayerY + rangeToleration >= positionBulletY && positionPlayerY - rangeToleration <= positionBulletY)
+                    enableY = true;
+
+                if(positionPlayerZ + rangeToleration >= positionBulletZ && positionPlayerZ - rangeToleration <= positionBulletZ)
+                    enableZ = true;
+
+                if (enableX && enableY && enableZ)
+                {
+                    SendStateCollisionEventTrue(playerId);
+                }
+                else
+                {
+                    SendStateCollisionEventFalse(playerId);
+                }
+
+            }
+        }
+        static void SendStateCollisionEventTrue(uint playerId)
+        {
+            var protocol = new Protocol();
+            var buffer = protocol.Serialize((byte)PacketId.CollisionBulletTrue, playerId);
+            var packet = default(Packet);
+            packet.Create(buffer);
+            _server.Broadcast(0, ref packet);
+        }
+        static void SendStateCollisionEventFalse(uint playerId)
+        {
+            var protocol = new Protocol();
+            var buffer = protocol.Serialize((byte)PacketId.CollisionBulletFalse, playerId);
+            var packet = default(Packet);
+            packet.Create(buffer);
+            _server.Broadcast(0, ref packet);
         }
         static void SendSpawnBulletEvent(uint playerId)
         {

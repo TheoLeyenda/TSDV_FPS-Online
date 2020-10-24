@@ -26,10 +26,12 @@ public class NetWorkingManager : MonoBehaviour
     private void OnEnable()
     {
         ProjectileStandard.OnShootBullet += SendSpawnBullet;
+        OtherProjectile.CollisionProjectilWhitPlayer += SendPositionBulletAndOtherPlayerCollision;
     }
     private void OnDisable()
     {
         ProjectileStandard.OnShootBullet -= SendSpawnBullet;
+        OtherProjectile.CollisionProjectilWhitPlayer -= SendPositionBulletAndOtherPlayerCollision;
     }
     void Start()
     {
@@ -41,7 +43,10 @@ public class NetWorkingManager : MonoBehaviour
     }
     void FixedUpdate()
     {
-        UpdateENet();
+        //for (int i = 0; i < 32; i++)
+        //{
+            UpdateENet();
+        //}
 
         if (++_skipFrame < 3)
             return;
@@ -78,7 +83,6 @@ public class NetWorkingManager : MonoBehaviour
     private void UpdateENet()
     {
         ENet.Event netEvent;
-
         if (_client.CheckEvents(out netEvent) <= 0)
         {
             if (_client.Service(15, out netEvent) <= 0)
@@ -120,6 +124,21 @@ public class NetWorkingManager : MonoBehaviour
         PositionAndRotationUpdateEvent = 5,
         LogoutEvent = 6,
         SpawnBulletEvent = 7,
+        CheckColisionBullet = 8,
+        CollisionBulletTrue = 9,
+        CollisionBulletFalse = 10,
+    }
+    private void SendPositionBulletAndOtherPlayerCollision(OtherProjectile projectileCollision, Transform OtherPlayerCollision)
+    {
+        float projectilePositionX = projectileCollision.transform.position.x;
+        float projectilePositionY = projectileCollision.transform.position.y;
+        float projectilePositionZ = projectileCollision.transform.position.z;
+
+        var protocol = new Protocol();
+        var buffer = protocol.Serialize((byte)PacketId.CheckColisionBullet, _myPlayerId, projectilePositionX, projectilePositionY, projectilePositionZ);
+        var packet = default(Packet);
+        packet.Create(buffer);
+        _peer.Send(channelID, ref packet);
     }
     private void SendSpawnBullet(ProjectileStandard otherPlayerWeapon)
     {
@@ -222,6 +241,14 @@ public class NetWorkingManager : MonoBehaviour
         {
             var playerId = reader.ReadUInt32();
             SpawnBulletOtherPlayer(playerId);
+        }
+        else if (packetId == PacketId.CollisionBulletTrue)
+        {
+            Debug.Log("PEGUE :D");
+        }
+        else if (packetId == PacketId.CollisionBulletFalse)
+        {
+            Debug.Log("NO PEGUE UNA GOMA D:");
         }
     }
     private void SpawnBulletOtherPlayer(uint playerId)
